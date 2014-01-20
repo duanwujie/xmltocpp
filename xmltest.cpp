@@ -1,19 +1,11 @@
 #include <iostream>
 #include <deque>
 #include <vector>
+#include <utility>
 using namespace std;
 #include "XmlParser.h"
 #include "CPPGen.h"
 #include "tinyxml.h"
-
-                
-const string KEY_LAYER="layer";
-const string KEY_RESOURCE="resource";
-const string KEY_SUB="sub";
-const string KEY_NULL="NULL";
-
-const int OPENED = 1;
-const int CLOSED = 0;
 
 
 
@@ -30,6 +22,7 @@ const string ClassKey[]={
         "work",
         "layer",
         "sub",
+        "subsub",
 };
 
 const string MemberKey[]={
@@ -55,6 +48,11 @@ public:
 vector<xmlItem *>  iv;
 deque<xmlItem *>  dv;
 deque<int> dep;
+
+
+
+/*  存放域名字符串 */
+deque< pair<string,int> > keydomin;
 
 
 
@@ -153,8 +151,20 @@ int main()
         SimpleGen h(hfile);
         SimpleGen c(cfile);
 
+        /*  生成root类 */
+        h.genClass(pRoot->Value());
+        TiXmlAttribute * attri = pRoot->FirstAttribute();
+        while(attri){
+                h.genMember("string",attri->Name(),1);
+                attri = attri->Next();
+        }
+        
+       
+        
+
+        
+
         int current_class_level=0;
-        int close_state = OPENED;
         int pre_level = 0;
 
         while(!dv.empty()){
@@ -192,12 +202,8 @@ int main()
                         }
                         h.genClass(cid,the->level);
 
-                        //if(close_state == CLOSED){
-                        //        //h.genClassEnd(the->level-1);
-                        //        close_state = OPENED;
-                        //}else{
-                        //        close_state = CLOSED;
-                        //}
+                        keydomin.push_back(make_pair(cid,the->level));
+
                 }
                
                 if("NULL" == the->key && the->level == pre_level){
@@ -228,12 +234,26 @@ int main()
                 //iv.pop_back();
                 dv.pop_front();
         }
+
+        //All closed gen {
         while(!dep.empty()){
                 current_class_level = dep.back();
                 h.genClassEnd(current_class_level);
                 dep.pop_back();
         }
+        h.genClassEnd();
+
+
         
+#ifdef _DEBUG
+        while(!keydomin.empty()){
+                pair<string,int> domin = keydomin.back();
+                cout<<domin.first<<","<<domin.second<<endl;
+                keydomin.pop_back();
+        }
+#endif
+
+
 
 
         //SimpleGen sim("Test.h");

@@ -24,6 +24,7 @@ public:
 
         void genPretreatment(string className,int level = 0);
         void genPretreatmentEnd(int level = 0);
+        void genInitMember(string domin,string value,int level = 0);
  
 };
 

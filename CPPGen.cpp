@@ -25,6 +25,8 @@ SimpleGen::~SimpleGen()
         "#define __"+className+"_H_\n")
 #define G_PRETREATMENT_E() ("#endif\n")
 
+#define G_INITMEMBER(domin,value,type) ("static const "+ type +" "+ domin +" = " +value+"\n")
+
 void inline SimpleGen::levelFormat(int level)
 {
         while(level--)out<<"\t";
@@ -62,6 +64,14 @@ void SimpleGen::genClassEnd(int level)
 {
         levelFormat(level);
         out<<G_CLASS_E();
+}
+
+void SimpleGen::genInitMember(string domin,string value, int level)
+{
+        
+        levelFormat(level);
+        string T="string";
+        G_INITMEMBER(domin,value,T);
 }
 
 /*
