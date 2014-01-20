@@ -12,6 +12,19 @@ const string KEY_RESOURCE="resource";
 const string KEY_SUB="sub";
 const string KEY_NULL="NULL";
 
+const int OPENED = 1;
+const int CLOSED = 0;
+
+
+
+int simpleFind(const string * arry,string s,int size)
+{
+        for(int i=0;i<size;i++){
+                if(arry[i] == s)return 1;
+        }
+        return 0;
+}
+
 //it is class member
 const string ClassKey[]={
         "work",
@@ -41,6 +54,7 @@ public:
 
 vector<xmlItem *>  iv;
 deque<xmlItem *>  dv;
+deque<int> dep;
 
 
 
@@ -99,8 +113,7 @@ int main()
   //TiXmlElement* studentElement =  studentsElement->FirstChildElement();  //Students
   //while ( studentElement ) {
   //  TiXmlAttribute* attributeOfStudent = studentElement->FirstAttribute();  //获得student的name属性
-  //  while ( attributeOfStudent ) {
-  //    std::cout << attributeOfStudent->Name() << " : " << attributeOfStudent->Value() << std::endl;
+  //  while ( attributeOfStudent ) { //    std::cout << attributeOfStudent->Name() << " : " << attributeOfStudent->Value() << std::endl;
   //    attributeOfStudent = attributeOfStudent->Next();
   //  }
   //  TiXmlElement* phoneElement = studentElement->FirstChildElement();//获得student的phone元素
@@ -137,20 +150,90 @@ int main()
         hfile+=".h";
         cfile+=".cpp";
         
-        SimpleGen simh(hfile);
-        SimpleGen simc(cfile);
+        SimpleGen h(hfile);
+        SimpleGen c(cfile);
+
+        int current_class_level=0;
+        int close_state = OPENED;
+        int pre_level = 0;
 
         while(!dv.empty()){
         //while(!iv.empty()){
                 //xmlItem * the = iv.back();
                 xmlItem * the = dv.front();
-                //cout<<the->key<<" "<<the->name<<" "<<the->value<<" "<<the->level<<endl;
-                cout<<the->key+"_"+the->name+"_"+the->value<<"\t"<<the->level<<endl;
+ 
+                if(!dep.empty()){
+                        pre_level = dep.back();
+                }
+
+
+
+                //Gernerate the class begin
+                if(simpleFind(ClassKey,the->key,sizeof(ClassKey)/sizeof(string))){
+                        string cid = the->key+"_"+the->name+"_"+the->value;
+                        //dep.push_back(the->level);
+
+                        //Get the press level
+                        
+                        cout<<"pre:"<<pre_level<<","<<"the:"<<the->level<<endl;
+                        if(the->level > pre_level){
+                                //该类属于上一层次的子类,因此上一层的类并没有处理完
+                                dep.push_back(the->level);
+                        }
+                        else if(the->level == pre_level){
+                                //处理完同一级的类了
+                                h.genClassEnd(the->level);
+                        }
+                        else if(the->level < pre_level){
+                                h.genClassEnd(pre_level);
+                                h.genClassEnd(pre_level-1);
+                                dep.pop_back();
+                                //当前类处理完了
+                        }
+                        h.genClass(cid,the->level);
+
+                        //if(close_state == CLOSED){
+                        //        //h.genClassEnd(the->level-1);
+                        //        close_state = OPENED;
+                        //}else{
+                        //        close_state = CLOSED;
+                        //}
+                }
+               
+                if("NULL" == the->key && the->level == pre_level){
+                        h.genMember("string",the->name,the->level + 1);
+                        //Here to process the cfile
+
+                }
+
+                if(simpleFind(MemberKey,the->key,sizeof(MemberKey)/sizeof(string))){
+                        string mid = the->key+"_"+the->name+"_"+the->value;
+                        h.genMember("string",mid,the->level);
+#ifdef _DEBUG
+                        cout<<"----------"<<endl;
+                        cout<< the->key<<endl;
+                        cout<<the->name<<endl;
+                        cout<<the->value<<endl;
+                        cout<<"----------"<<endl;
+                        cout<<endl;
+#endif
+
+
+                }
+
+
+                cout<<the->key<<" "<<the->name<<" "<<the->value<<" "<<the->level<<endl;
+                //cout<<the->key+"_"+the->name+"_"+the->value<<"\t"<<the->level<<endl;
                 delete the;
                 //iv.pop_back();
                 dv.pop_front();
-
         }
+        while(!dep.empty()){
+                current_class_level = dep.back();
+                h.genClassEnd(current_class_level);
+                dep.pop_back();
+        }
+        
 
 
         //SimpleGen sim("Test.h");

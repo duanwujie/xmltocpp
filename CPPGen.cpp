@@ -16,7 +16,7 @@ SimpleGen::~SimpleGen()
 
 #define G_PUBLIC_B() ("public:\n")
 
-#define G_CLASS_E() ("};\n")
+#define G_CLASS_E() ("};\n\n")
 
 #define G_MEMBER(type,name)("static const " + type + " " + name + ";\n")
 
