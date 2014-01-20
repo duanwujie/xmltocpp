@@ -12,6 +12,17 @@ const string KEY_RESOURCE="resource";
 const string KEY_SUB="sub";
 const string KEY_NULL="NULL";
 
+//it is class member
+const string ClassKey[]={
+        "work",
+        "layer",
+        "sub",
+};
+
+const string MemberKey[]={
+        "resource",
+};
+
 
 class xmlItem{
 public:
@@ -116,27 +127,40 @@ int main()
 	TiXmlElement *pRoot = aDoc.RootElement();
 	TiXmlElement *pWork = pRoot;
 
-    ParseXmlText(pWork,0);
-	//ShowNodeInfo(pWork);
-    //parseElement(pWork);
-    //while(!iv.empty()){
-    while(!dv.empty()){
-            //xmlItem * the = iv.back();
-            xmlItem * the = dv.front();
-            //cout<<the->key<<" "<<the->name<<" "<<the->value<<" "<<the->level<<endl;
-            cout<<the->key+"_"+the->name+"_"+the->value<<"\t"<<the->level<<endl;
-            delete the;
-            //iv.pop_back();
-            dv.pop_front();
+    
+        ParseXmlText(pWork,0);
+    
+    
+        //Create file 
+        string hfile=pRoot->Value();
+        string cfile=pRoot->Value();
+        hfile+=".h";
+        cfile+=".cpp";
+        
+        SimpleGen simh(hfile);
+        SimpleGen simc(cfile);
 
-    }
+        while(!dv.empty()){
+        //while(!iv.empty()){
+                //xmlItem * the = iv.back();
+                xmlItem * the = dv.front();
+                //cout<<the->key<<" "<<the->name<<" "<<the->value<<" "<<the->level<<endl;
+                cout<<the->key+"_"+the->name+"_"+the->value<<"\t"<<the->level<<endl;
+                delete the;
+                //iv.pop_back();
+                dv.pop_front();
 
-    SimpleGen sim("Test.h");
-    sim.genPretreatment("Test");
-    sim.genClass("Test");
-    sim.genMember("string","resource_id_1");
-    sim.genClassEnd();
-    sim.genPretreatmentEnd();
+        }
+
+
+        //SimpleGen sim("Test.h");
+        //sim.genPretreatment("Test");
+
+        //sim.genClass("Test");
+        //sim.genMember("string","resource_id_1",1);
+        //sim.genClassEnd();
+
+        //sim.genPretreatmentEnd();
 
 }
 

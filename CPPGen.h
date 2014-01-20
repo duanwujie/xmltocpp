@@ -9,20 +9,21 @@ using namespace std;
 class SimpleGen
 {
         ofstream  out;
+        void inline levelFormat(int level);
 public:
         //SimpleGen(string filename);
         SimpleGen(string filename):out(filename.c_str(),ofstream::out|ofstream::trunc){}
         ~SimpleGen();
 
         /* class gen function */
-        void genClass(string className);
-        void genClassEnd();
+        void genClass(string className,int level = 0);
+        void genClassEnd(int level = 0);
 
         /*  member gen function  */
-        void genMember(string type,string name);
+        void genMember(string type,string name,int level = 0);
 
-        void genPretreatment(string className);
-        void genPretreatmentEnd();
+        void genPretreatment(string className,int level = 0);
+        void genPretreatmentEnd(int level = 0);
  
 };
 
