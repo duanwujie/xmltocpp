@@ -12,21 +12,6 @@ SimpleGen::~SimpleGen()
 }
 
 
-#define G_CLASS_B(className) ("class " + className + "{" + "\n")
-
-#define G_PUBLIC_B() ("public:\n")
-
-#define G_CLASS_E() ("};\n\n")
-
-#define G_MEMBER(type,name)("static const " + type + " " + name + ";\n")
-
-#define G_PRETREATMENT(className) \
-        ("#ifndef __"+className+"_H_\n"+\
-        "#define __"+className+"_H_\n")
-#define G_PRETREATMENT_E() ("#endif\n")
-
-#define G_INITMEMBER(domin,value,type) ("static const "+ type +" "+ domin +" = " +value+"\n")
-
 void inline SimpleGen::levelFormat(int level)
 {
         while(level--)out<<"\t";

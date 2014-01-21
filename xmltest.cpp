@@ -1,12 +1,15 @@
 #include <iostream>
 #include <deque>
 #include <vector>
+#include <list>
 #include <utility>
 using namespace std;
 #include "XmlParser.h"
 #include "CPPGen.h"
 #include "tinyxml.h"
 
+
+TiXmlElement * g_pRoot=NULL;
 
 
 int simpleFind(const string * arry,string s,int size)
@@ -19,14 +22,15 @@ int simpleFind(const string * arry,string s,int size)
 
 //it is class member
 const string ClassKey[]={
-        "work",
+        "works",
         "layer",
         "sub",
         "subsub",
+        "resource",
 };
 
 const string MemberKey[]={
-        "resource",
+//        "resource",
 };
 
 
@@ -45,16 +49,20 @@ public:
 
 };
 
+
 vector<xmlItem *>  iv;
+
 deque<xmlItem *>  dv;
+
 deque<int> dep;
 
 
 
 /*  存放域名字符串 */
-deque< pair<string,int> > keydomin;
+list< pair<string,int> > keydomin;
 
 
+list<TiXmlElement *> pparent;
 
 
 bool ParseXmlText(TiXmlElement* pEleRoot,int level)
@@ -75,24 +83,43 @@ bool ParseXmlText(TiXmlElement* pEleRoot,int level)
         }
         TiXmlAttribute* attr = pEle->FirstAttribute();  //获得student的name属性
         xmlItem * temp = new xmlItem(pEle->Value(),attr->Name(),attr->Value(),level);
-        iv.push_back(temp);
-        dv.push_back(temp);
-        //cout<<pEle->Value()<<" ";
-        attr = attr->Next();
-        while (attr) {
-          //cout << attr->Name() << " " << attr->Value() << endl;
-          xmlItem * temp1 = new xmlItem("NULL",attr->Name(),attr->Value(),level);
-            
 
-          iv.push_back(temp1);
-          dv.push_back(temp1);
-          attr = attr->Next();
+        dv.push_back(temp);
+        //cout<<pEle->Value()<<"::";
+
+        TiXmlAttribute* first = attr;
+
+        attr = attr->Next();
+
+        //TiXmlNode *parent = pEle->Parent();
+
+        
+
+        while (attr) {
+                //cout << attr->Name() << " " << attr->Value() << endl;
+        TiXmlElement * p = pEle;
+        while(p!=g_pRoot){
+                pparent.push_back(p);
+                p=p->Parent()->ToElement();
+        }
+
+        while(!pparent.empty()){
+                TiXmlElement * cur = pparent.back();
+                TiXmlAttribute * cat = cur->FirstAttribute();
+                cout<<cur->Value()<<"_"<<cat->Name()<<"_"<<cat->Value()<<"::";
+                pparent.pop_back();
+        }
+                
+                cout<<attr->Name()<<" = "<<"\""<<attr->Value()<<"\""<<endl;
+                xmlItem * temp1 = new xmlItem("NULL",attr->Name(),attr->Value(),level);
+                dv.push_back(temp1);
+                attr = attr->Next();
         }
         ParseXmlText(pEle,level);
         
 
         
-        cout << endl;
+        //cout << endl;
     }
 
 
@@ -137,6 +164,7 @@ int main()
 
 	TiXmlElement *pRoot = aDoc.RootElement();
 	TiXmlElement *pWork = pRoot;
+        g_pRoot = pRoot;
 
     
         ParseXmlText(pWork,0);
@@ -152,6 +180,7 @@ int main()
         SimpleGen c(cfile);
 
         /*  生成root类 */
+        h.genPretreatment(pRoot->Value());
         h.genClass(pRoot->Value());
         TiXmlAttribute * attri = pRoot->FirstAttribute();
         while(attri){
@@ -166,6 +195,9 @@ int main()
 
         int current_class_level=0;
         int pre_level = 0;
+
+                        
+        int cen=0xFF;
 
         while(!dv.empty()){
         //while(!iv.empty()){
@@ -184,8 +216,9 @@ int main()
                         //dep.push_back(the->level);
 
                         //Get the press level
-                        
+#ifdef _DEBUG
                         cout<<"pre:"<<pre_level<<","<<"the:"<<the->level<<endl;
+#endif
                         if(the->level > pre_level){
                                 //该类属于上一层次的子类,因此上一层的类并没有处理完
                                 dep.push_back(the->level);
@@ -202,20 +235,25 @@ int main()
                         }
                         h.genClass(cid,the->level);
 
+                        //if(!keydomin.empty() && keydomin.back().second >= the->level)keydomin.pop_back();
                         keydomin.push_back(make_pair(cid,the->level));
 
                 }
+
+
                
                 if("NULL" == the->key && the->level == pre_level){
                         h.genMember("string",the->name,the->level + 1);
+
+                        //cout<<"name:"<<the->name<<","<<"level:"<<the->level<<endl;
                         //Here to process the cfile
+                        string value = the->value;
+                        string domin;
 
-                }
+                        
 
-                if(simpleFind(MemberKey,the->key,sizeof(MemberKey)/sizeof(string))){
-                        string mid = the->key+"_"+the->name+"_"+the->value;
-                        h.genMember("string",mid,the->level);
 #ifdef _DEBUG
+#undef _DEBUG
                         cout<<"----------"<<endl;
                         cout<< the->key<<endl;
                         cout<<the->name<<endl;
@@ -227,8 +265,25 @@ int main()
 
                 }
 
+                if(simpleFind(MemberKey,the->key,sizeof(MemberKey)/sizeof(string))){
+                        string mid = the->key+"_"+the->name+"_"+the->value;
+                        h.genMember("string",mid,the->level);
+//#define _DEBUG
+#ifdef _DEBUG
+#undef _DEBUG
 
-                cout<<the->key<<" "<<the->name<<" "<<the->value<<" "<<the->level<<endl;
+                        cout<<"----------"<<endl;
+                        cout<< the->key<<endl;
+                        cout<<the->name<<endl;
+                        cout<<the->value<<endl;
+                        cout<<"----------"<<endl;
+                        cout<<endl;
+#endif
+
+                }
+
+
+                //cout<<the->key<<" "<<the->name<<" "<<the->value<<" "<<the->level<<endl;
                 //cout<<the->key+"_"+the->name+"_"+the->value<<"\t"<<the->level<<endl;
                 delete the;
                 //iv.pop_back();
@@ -242,16 +297,23 @@ int main()
                 dep.pop_back();
         }
         h.genClassEnd();
+        h.genPretreatmentEnd();
 
 
         
 #ifdef _DEBUG
+        cout<<"++++++++++++++++++++++++++++++++++++++++"<<endl;
         while(!keydomin.empty()){
-                pair<string,int> domin = keydomin.back();
-                cout<<domin.first<<","<<domin.second<<endl;
-                keydomin.pop_back();
+                pair<string,int> domin = keydomin.front();
+                //cout<<domin.first<<","<<domin.second<<endl;
+                cout<<domin.second<<",";
+                keydomin.pop_front();
         }
+        cout<<"++++++++++++++++++++++++++++++++++++++++"<<endl;
 #endif
+
+
+
 
 
 

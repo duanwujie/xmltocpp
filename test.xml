@@ -1,4 +1,4 @@
-<works name="测试作品"
+<works id = 1 name="测试作品"
         author="duawnujie"
         crateTime="2014-1-15"
         className="二班"
