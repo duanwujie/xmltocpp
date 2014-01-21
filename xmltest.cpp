@@ -97,20 +97,23 @@ bool ParseXmlText(TiXmlElement* pEleRoot,int level)
 
         while (attr) {
                 //cout << attr->Name() << " " << attr->Value() << endl;
-        TiXmlElement * p = pEle;
-        while(p!=g_pRoot){
-                pparent.push_back(p);
-                p=p->Parent()->ToElement();
-        }
+                TiXmlElement * p = pEle;
+                while(p!=g_pRoot){
+                        pparent.push_back(p);
+                        p=p->Parent()->ToElement();
+                }
+                //pparent.push_back(g_pRoot);
 
-        while(!pparent.empty()){
-                TiXmlElement * cur = pparent.back();
-                TiXmlAttribute * cat = cur->FirstAttribute();
-                cout<<cur->Value()<<"_"<<cat->Name()<<"_"<<cat->Value()<<"::";
-                pparent.pop_back();
-        }
+                cout<<"static const ";
+                cout<<g_pRoot->Value()<<"::";
+                while(!pparent.empty()){
+                        TiXmlElement * cur = pparent.back();
+                        TiXmlAttribute * cat = cur->FirstAttribute();
+                        cout<<cur->Value()<<"_"<<cat->Name()<<"_"<<cat->Value()<<"::";
+                        pparent.pop_back();
+                }
                 
-                cout<<attr->Name()<<" = "<<"\""<<attr->Value()<<"\""<<endl;
+                cout<<attr->Name()<<" = "<<"\""<<attr->Value()<<"\" ;"<<endl;
                 xmlItem * temp1 = new xmlItem("NULL",attr->Name(),attr->Value(),level);
                 dv.push_back(temp1);
                 attr = attr->Next();
