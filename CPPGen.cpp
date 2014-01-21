@@ -59,6 +59,18 @@ void SimpleGen::genInitMember(string domin,string value, int level)
         G_INITMEMBER(domin,value,T);
 }
 
+void SimpleGen::genIncludeNeed(string inc,int level)
+{
+        levelFormat(level);
+        out<<G_INCLUDE(inc);
+}
+
+void SimpleGen::genNamespace(string space,int level)
+{
+        levelFormat(level);
+        out<<G_NAMESPACE(space);
+}
+
 /*
  * 
  *  template

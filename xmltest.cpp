@@ -93,8 +93,6 @@ bool ParseXmlText(TiXmlElement* pEleRoot,int level)
         
 
         while (attr) {
-                //cout << attr->Name() << " " << attr->Value() << endl;
-                cout<<attr->Name()<<" = "<<"\""<<attr->Value()<<"\" ;"<<endl;
                 xmlItem * temp1 = new xmlItem("NULL",attr->Name(),attr->Value(),level);
                 dv.push_back(temp1);
                 attr = attr->Next();
@@ -110,7 +108,7 @@ bool ParseXmlText(TiXmlElement* pEleRoot,int level)
     return true;
 }
 
-bool ConfigToCpp(TiXmlElement* pEleRoot,int level)
+bool ConfigToCpp(TiXmlElement* pEleRoot,SimpleGen * mgen)
 {
     if (NULL == pEleRoot)
     {
@@ -133,101 +131,48 @@ bool ConfigToCpp(TiXmlElement* pEleRoot,int level)
                 }
                 //pparent.push_back(g_pRoot);
 
-                cout<<"static const ";
-                cout<<g_pRoot->Value()<<"::";
+                mgen->out<<"const string ";
+                mgen->out<<g_pRoot->Value()<<"::";
                 while(!pparent.empty()){
                         TiXmlElement * cur = pparent.back();
                         TiXmlAttribute * cat = cur->FirstAttribute();
-                        cout<<cur->Value()<<"_"<<cat->Name()<<"_"<<cat->Value()<<"::";
+                        mgen->out<<cur->Value()<<"_"<<cat->Name()<<"_"<<cat->Value()<<"::";
                         pparent.pop_back();
                 }
                 
-                cout<<attr->Name()<<" = "<<"\""<<attr->Value()<<"\" ;"<<endl;
+                mgen->out<<attr->Name()<<" = "<<"\""<<attr->Value()<<"\" ;"<<endl;
                 attr = attr->Next();
         }
-        ConfigToCpp(pEle,level);
+        ConfigToCpp(pEle,mgen);
     }
     return true;
 }
 
-
-int main()
+int ConfigToH(TiXmlElement * pRoot)
 {
 
-  //TiXmlDocument* myDocument = new TiXmlDocument();
-  //myDocument->LoadFile("test6.xml");
-
-  //TiXmlElement* rootElement = myDocument->RootElement();  //Class
-  //TiXmlElement* studentsElement = rootElement->FirstChildElement();  //Students
-  //TiXmlElement* studentElement =  studentsElement->FirstChildElement();  //Students
-  //while ( studentElement ) {
-  //  TiXmlAttribute* attributeOfStudent = studentElement->FirstAttribute();  //获得student的name属性
-  //  while ( attributeOfStudent ) { //    std::cout << attributeOfStudent->Name() << " : " << attributeOfStudent->Value() << std::endl;
-  //    attributeOfStudent = attributeOfStudent->Next();
-  //  }
-  //  TiXmlElement* phoneElement = studentElement->FirstChildElement();//获得student的phone元素
-  //  std::cout << "phone" << " : " << phoneElement->GetText() << std::endl;
-  //  TiXmlElement* addressElement = phoneElement->NextSiblingElement();
-  //  std::cout << "address" << " : " << phoneElement->GetText() << std::endl;
-  //  studentElement = studentElement->NextSiblingElement();
-  //}
-  //return 0;
-  
-//        XmlParser xmlrole;
-//        std::string xmlfile="test.xml";
-//        xmlrole.init(xmlfile);
-//        xmlrole.DoParser();
-
-	TiXmlDocument aDoc("test.xml");
-
-	if ( ! aDoc.LoadFile() )
-	{
-		perror("打开test.xml失败:");
-		return -1;
-	}
-
-	TiXmlElement *pRoot = aDoc.RootElement();
-	TiXmlElement *pWork = pRoot;
-        g_pRoot = pRoot;
-
-    
-        ParseXmlText(pWork,0);
-        ConfigToCpp(pWork,0);
-        
-    
-    
         //Create file 
         string hfile=pRoot->Value();
-        string cfile=pRoot->Value();
         hfile+=".h";
-        cfile+=".cpp";
         
         SimpleGen h(hfile);
-        SimpleGen c(cfile);
 
         /*  生成root类 */
         h.genPretreatment(pRoot->Value());
+        h.genIncludeNeed("iostream");
+        h.genNamespace("std");
         h.genClass(pRoot->Value());
         TiXmlAttribute * attri = pRoot->FirstAttribute();
         while(attri){
                 h.genMember("string",attri->Name(),1);
                 attri = attri->Next();
         }
-        
-       
-        
-
-        
-
         int current_class_level=0;
         int pre_level = 0;
 
                         
-        int cen=0xFF;
 
         while(!dv.empty()){
-        //while(!iv.empty()){
-                //xmlItem * the = iv.back();
                 xmlItem * the = dv.front();
  
                 if(!dep.empty()){
@@ -251,12 +196,20 @@ int main()
                         }
                         else if(the->level == pre_level){
                                 //处理完同一级的类了
+                                //dep.push_back(the->level);
+                                h.genNamespace("dddd");
                                 h.genClassEnd(the->level);
                         }
                         else if(the->level < pre_level){
-                                h.genClassEnd(pre_level);
-                                h.genClassEnd(pre_level-1);
-                                dep.pop_back();
+
+                                for(int k=pre_level;k>=the->level;k--){
+                                        h.genClassEnd(k);
+                                        dep.pop_back();
+                                }
+                                h.genNamespace("test");
+                                dep.push_back(the->level);
+
+
                                 //当前类处理完了
                         }
                         h.genClass(cid,the->level);
@@ -288,34 +241,33 @@ int main()
         }
         h.genClassEnd();
         h.genPretreatmentEnd();
+}
 
 
+int main()
+{
+
+	TiXmlDocument aDoc("test.xml");
+	if ( ! aDoc.LoadFile() )
+	{
+		perror("打开test.xml失败:");
+		return -1;
+	}
+
+	TiXmlElement *pRoot = aDoc.RootElement();
+	TiXmlElement *pWork = pRoot;
+
+        g_pRoot = pRoot;
+        string cfile=pRoot->Value();
+        string hfile=pRoot->Value();
+        hfile+=".h";
+        cfile+=".cpp";
+        SimpleGen c(cfile);
+        c.genIncludeNeed(hfile);
         
-#ifdef _DEBUG
-        cout<<"++++++++++++++++++++++++++++++++++++++++"<<endl;
-        while(!keydomin.empty()){
-                pair<string,int> domin = keydomin.front();
-                //cout<<domin.first<<","<<domin.second<<endl;
-                cout<<domin.second<<",";
-                keydomin.pop_front();
-        }
-        cout<<"++++++++++++++++++++++++++++++++++++++++"<<endl;
-#endif
+        ConfigToCpp(pWork,&c);
 
-
-
-
-
-
-
-        //SimpleGen sim("Test.h");
-        //sim.genPretreatment("Test");
-
-        //sim.genClass("Test");
-        //sim.genMember("string","resource_id_1",1);
-        //sim.genClassEnd();
-
-        //sim.genPretreatmentEnd();
-
+        ParseXmlText(pWork,0);
+        ConfigToH(pWork);
 }
 

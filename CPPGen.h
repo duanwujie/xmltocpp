@@ -20,14 +20,18 @@ using namespace std;
 
 #define G_INITMEMBER(domin,value,type) ("static const "+ type +" "+ domin +" = " +value+"\n")
 
+#define G_INCLUDE(inc) ("#include" "\"" + inc +"\"\n")
+
+#define G_NAMESPACE(space) ("using namespace "+space + ";\n")
+
 
 
 
 class SimpleGen
 {
-        ofstream  out;
         void inline levelFormat(int level);
 public:
+        ofstream  out;
         //SimpleGen(string filename);
         SimpleGen(string filename):out(filename.c_str(),ofstream::out|ofstream::trunc){}
         ~SimpleGen();
@@ -42,6 +46,8 @@ public:
         void genPretreatment(string className,int level = 0);
         void genPretreatmentEnd(int level = 0);
         void genInitMember(string domin,string value,int level = 0);
+        void genIncludeNeed(string inc, int level = 0);
+        void genNamespace(string space, int levle = 0);
  
 };
 
