@@ -90,7 +90,7 @@ all: ${OUTPUT}
 # Source files
 #****************************************************************************
 
-SRCS := tinyxml.cpp tinyxmlparser.cpp xmltest.cpp tinyxmlerror.cpp tinystr.cpp XmlParser.cpp CPPGen.cpp
+SRCS := tinyxml.cpp tinyxmlparser.cpp xml2cpp.cpp tinyxmlerror.cpp tinystr.cpp XmlParser.cpp CPPGen.cpp
 
 # Add on the sources for libraries
 SRCS := ${SRCS}
