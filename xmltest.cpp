@@ -197,7 +197,7 @@ int ConfigToH(TiXmlElement * pRoot)
                         else if(the->level == pre_level){
                                 //处理完同一级的类了
                                 //dep.push_back(the->level);
-                                h.genNamespace("dddd");
+                                //h.genNamespace("dddd");
                                 h.genClassEnd(the->level);
                         }
                         else if(the->level < pre_level){
@@ -206,7 +206,7 @@ int ConfigToH(TiXmlElement * pRoot)
                                         h.genClassEnd(k);
                                         dep.pop_back();
                                 }
-                                h.genNamespace("test");
+                                //h.genNamespace("test");
                                 dep.push_back(the->level);
 
 
